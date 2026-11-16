@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.hpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: hkonstan <hkonstan@student.42.fr>          +#+  +:+       +#+        */
+/*   By: hariskon <hariskonstadinidis@gmail.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/11/13 16:16:00 by hkonstan          #+#    #+#             */
-/*   Updated: 2026/11/13 16:37:34 by hkonstan         ###   ########.fr       */
+/*   Updated: 2026/11/16 15:00:23 by hariskon         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,3 +25,11 @@
 #include <cstdio>
 #include <fstream>
 #include <sstream>
+#include <unordered_map>
+
+struct Client
+{
+    std::string requestBuffer;
+    std::string responseBuffer;
+    size_t      bytesSent = 0;    
+};

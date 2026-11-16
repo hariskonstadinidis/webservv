@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: hkonstan <hkonstan@student.42.fr>          +#+  +:+       +#+        */
+/*   By: hariskon <hariskonstadinidis@gmail.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/11/12 18:40:59 by hkonstan          #+#    #+#             */
-/*   Updated: 2026/11/13 19:07:51 by hkonstan         ###   ########.fr       */
+/*   Updated: 2026/11/16 13:33:33 by hariskon         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,58 +14,74 @@
 
 int main()
 {
+    //CREATES SOCKET
     int server_fd = socket(AF_INET, SOCK_STREAM, 0);
 
+    //CREATES ADDRESS
     sockaddr_in addr{};
     addr.sin_family = AF_INET;
     addr.sin_port = htons(8080);
     addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
 
-    int b = bind(server_fd, reinterpret_cast<sockaddr*>(&addr), sizeof(addr));
-    if (b == -1)
+    //BIND ADRESS TO THAT SOCKET
+    if (bind(server_fd, reinterpret_cast<sockaddr*>(&addr), sizeof(addr)) == -1)
     {
-        perror("bind");
+        std::perror("bind");
+        close(server_fd);
         return 1;
     }
 
-    int l = listen(server_fd, 10);
-    if (l == -1)
+    //PREPARE THE SOCKET TO RECEIVE REQUESTS
+    if (listen(server_fd, 10) == -1)
     {
-        perror("listen");
+        std::perror("listen");
+        close(server_fd);
         return 1;
     }
 
+    //CREATE AN EVENT FOR THE SERVER
     epoll_event event{};
     event.events = EPOLLIN;
     event.data.fd = server_fd;
     
+    //CREATE A POLL INSTANCE TO MONITOR THE REQUESTS
     int poll_fd = epoll_create1(0);
+    //ADD SERVER SOCKET TO THE MONITORING INSTANCE
     epoll_ctl(poll_fd, EPOLL_CTL_ADD,server_fd, &event);
 
     epoll_event events[10]{};
     
-    int ready = epoll_wait(poll_fd, events, 10, -1) ;
-    if (ready == -1)
-    {
-        std::cerr << "epoll fail\n";
-    }
     while (true)
     {  
+        if (epoll_wait(poll_fd, events, 10, 1) == -1){
+            
+            std::perror("epoll failed");
+            //clean fd buffers
+            for(int i = 0;)
+        }
+        
         for(int i = 0; i < ready ; i++)
         {
             
             if (events[i].events & POLLIN)
             {
-                int client_fd = accept(events[i].data.fd, nullptr, nullptr);
-                if (client_fd == -1)
-                    std::perror("accept");
-                std::cout << "client connecte\n";
-                
-                epoll_event client_event{};
-                client_event.events = POLLIN;
-                client_event.data.fd = client_fd;
-                
-                epoll_ctl(poll_fd, EPOLL_CTL_ADD, client_fd, &client_event);
+                if (events[i].data.fd == server_fd)
+                {
+                    int client_fd = accept(events[i].data.fd, nullptr, nullptr);
+                    if (client_fd == -1)
+                        std::perror("accept");
+                    std::cout << "client connected\n";
+                    
+                    epoll_event client_event{};
+                    client_event.events = POLLIN;
+                    client_event.data.fd = client_fd;
+                    
+                    epoll_ctl(poll_fd, EPOLL_CTL_ADD, client_fd, &client_event);
+                }
+                else
+                {
+                    
+                }
             }
     
             if (pfds.size() > 1 && (pfds[1].revents & POLLIN))

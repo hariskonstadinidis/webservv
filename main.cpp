@@ -6,7 +6,7 @@
 /*   By: hariskon <hariskonstadinidis@gmail.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/11/12 18:40:59 by hkonstan          #+#    #+#             */
-/*   Updated: 2026/11/16 15:36:00 by hariskon         ###   ########.fr       */
+/*   Updated: 2026/11/19 14:20:27 by hariskon         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,7 +63,8 @@ int main()
     epoll_event events[10]{};
     std::unordered_map<int, Client> clients;
     
-    while (true)
+    State server = State::run;
+    while (server == State::run)
     {  
         int ready = epoll_wait(poll_fd, events, 10, 1);
         if (ready == -1)
@@ -112,11 +113,22 @@ int main()
             {
                 if (flags & EPOLLIN)
                 {
-                    char buffer[100];
+                    char buffer[4096];
         
                     ssize_t n = recv(fd, buffer, sizeof(buffer), 0);
-        
+                    std::cout << "request received\n";
                     if (n > 0)
+                    {
+                        event.events = EPOLLOUT;
+                        event.data.fd = fd;
+                        if (epoll_ctl(poll_fd, EPOLL_CTL_MOD, fd, &event) == -1)
+                        {
+                            std::perror("epoll mod failer\n");
+                            break;
+                        }
+                    }
+                }
+                if (flags & EPOLLOUT)
                     {
                         std::ifstream file("index.html");
                         std::stringstream ss;
@@ -131,20 +143,22 @@ int main()
                         "Connection: close\r\n"
                         "\r\n"
                         + html;
-                        
                         send(fd, response.data(), response.size(), 0);
+                        epoll_ctl(poll_fd, EPOLL_CTL_DEL, fd, nullptr);
+                        close(fd);
+                        clients.erase(fd);
                     }
-                }
             }
         }
     }
 
-    for (auto it = clients.begin(); it == clients.end();)
-    {
-        close(it->first);
-        it++;
-        clients.erase(it);
-    }
+    // for (auto it = clients.begin(); it == clients.end();)
+    // {
+    //     close(it->first);
+    //     it++;
+    //     clients.erase(it);
+    // }
     close(server_fd);
+    close(poll_fd);
     return 0;
 }

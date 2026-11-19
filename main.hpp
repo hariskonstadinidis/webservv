@@ -6,7 +6,7 @@
 /*   By: hariskon <hariskonstadinidis@gmail.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/11/13 16:16:00 by hkonstan          #+#    #+#             */
-/*   Updated: 2026/11/16 15:00:23 by hariskon         ###   ########.fr       */
+/*   Updated: 2026/11/17 15:29:42 by hariskon         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,4 +32,10 @@ struct Client
     std::string requestBuffer;
     std::string responseBuffer;
     size_t      bytesSent = 0;    
+};
+
+enum class State
+{
+    run,
+    stop
 };
